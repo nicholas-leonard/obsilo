@@ -1,7 +1,7 @@
 # Obsilo Agent -- Vollstaendiges Backlog
 
-Stand: 2026-04-01
-Branch: `dev` / `feature/mcp-connector`
+Stand: 2026-04-09
+Branch: `dev` / `feature/gemini-provider`
 
 ---
 
@@ -78,7 +78,7 @@ Branch: `dev` / `feature/mcp-connector`
 - File Picker Erweiterung (VaultFilePicker fuer Office-Formate)
 - Task Extraction (TaskExtractor, TaskNoteCreator, TaskSelectionModal)
 - Office Document Creation (create_docx, create_pptx, create_xlsx)
-- PPTX Template Pipeline (ingest_template, plan_presentation, render_presentation -- ADR-046/047/048/049)
+- PPTX Template Pipeline (plan_presentation, render_presentation -- ADR-046/047/048/049)
 
 ### EPIC-012: GitHub Copilot LLM Provider
 
@@ -98,12 +98,14 @@ Branch: `dev` / `feature/mcp-connector`
 - Embedding Support (Kilo als Embedding-Provider)
 - Manual Token Mode (Direkteingabe statt Device Auth)
 
-### EPIC-014: MCP Connector -- Phase 1
+### EPIC-014: MCP Connector
 
 - MCP Server Core (stdio via McpBridge, mcp-server-worker, 6 Tools)
 - Tool-Tier-Mapping (3-Tier-System: read/search/write mit Approval-Gates)
 - MCP Settings UI (McpTab: Server-Status, Claude Desktop Auto-Config)
 - Sidebar Refactoring (SuggestionBanner + OnboardingFlow aus AgentSidebarView extrahiert)
+- Remote Transport (FEATURE-1403: CloudflareDeployer, RelayClient, HTTP Long-Polling, Token-in-URL Auth)
+- Memory Transparency (FEATURE-1411: updateMemory MCP-Tool)
 
 ### EPIC-015: Unified Knowledge Layer
 
@@ -116,11 +118,25 @@ Branch: `dev` / `feature/mcp-connector`
 - Implicit Connection UI (Vorschlags-Anzeige fuer unverlinkte Verbindungen)
 - Storage Consolidation (Zwei-DB-Strategie: KnowledgeDB + MemoryDB, Legacy-Cleanup)
 
+### EPIC-018: Token-Kostenreduktion
+
+- Fast Path Execution (ADR-061: FastPathExecutor.ts, Recipe-gesteuertes Batching, deterministische Tool-Ausfuehrung)
+- KV-Cache-Optimized Prompt (ADR-062: Stabile Sections vorne, volatile hinten, Provider-agnostisch)
+- Context Externalization (ADR-063: ResultExternalizer.ts, grosse Tool-Results in temp-Dateien)
+- Ergebnis: 634k -> 60k Tokens fuer einfache Tasks (90% Reduktion), GitHub Copilot funktioniert wieder
+
+### EPIC-019: Knowledge Maintenance -- Phase 1 (teilweise)
+
+- Vault Health Check (FEATURE-1901: VaultHealthCheckTool, VaultHealthService, VaultHealthRepairModal mit Checkpoint-backed Undo)
+- Ontologie (FEATURE-1902, teilweise: OntologyStore.ts in SQLite, Cluster/Entity-Beziehungen)
+- OCR Integration (FEATURE-1905: OCR-Fallback fuer gescannte PDFs via text-extractor Plugin)
+- Memory-Verbesserungen (ADR-058/059/060: Semantic Recipe Promotion, Memory Decay Prevention, Session Summary Reliability)
+
 ---
 
 ## Aktueller Feature-Status
 
-### Vollstaendig implementiert (49 Tools, alle Features)
+### Vollstaendig implementiert (49 Tools)
 
 | Feature | Spec | Key Files |
 |---------|------|-----------|
@@ -181,7 +197,6 @@ Branch: `dev` / `feature/mcp-connector`
 | Task Extraction & Management | FEATURE-0801-task-extraction.md | `src/core/tasks/` |
 | PPTX Template-Engine | FEATURE-1100-template-engine.md | `src/core/office/pptx/TemplateEngine.ts` |
 | plan_presentation Tool | -- (ADR-048) | `src/core/tools/vault/PlanPresentationTool.ts` |
-| ingest_template Tool | -- (ADR-046) | `src/core/tools/vault/IngestTemplateTool.ts` |
 | render_presentation Tool | FEATURE-1115 | `src/core/tools/vault/RenderPresentationTool.ts` |
 | Basis-Praesentationsregeln | FEATURE-1105-universal-design-principles.md | Presentation-Design Skill (ADR-047) |
 | Copilot Auth & Token Management | FEATURE-1201-copilot-auth-token-management.md | `src/core/security/GitHubCopilotAuthService.ts` |
@@ -208,6 +223,13 @@ Branch: `dev` / `feature/mcp-connector`
 | Knowledge Data Consolidation | FEATURE-1505-knowledge-data-consolidation.md | `src/core/knowledge/MemoryDB.ts` |
 | Implicit Connection UI | FEATURE-1506-implicit-connection-ui.md | `src/core/knowledge/ImplicitConnectionService.ts` |
 | Storage Consolidation | FEATURE-1508-storage-consolidation.md | `src/core/knowledge/` |
+| Remote Transport (MCP) | FEATURE-1403-remote-transport.md | `src/mcp/CloudflareDeployer.ts`, `RelayClient.ts` |
+| Memory Transparency (MCP) | FEATURE-1411-memory-transparency.md | `src/mcp/tools/updateMemory.ts` |
+| Fast Path Execution | FEATURE-1800-fast-path-execution.md | `src/core/FastPathExecutor.ts` |
+| KV-Cache Prompt Caching | FEATURE-1801-prompt-caching.md | `src/core/prompts/sections/` |
+| Context Externalization | FEATURE-1802-context-externalization.md | `src/core/tool-execution/ResultExternalizer.ts` |
+| Vault Health Check | FEATURE-1901-vault-health-check.md | `src/core/knowledge/VaultHealthService.ts`, `VaultHealthCheckTool.ts` |
+| OCR Integration | FEATURE-1905-ocr-integration.md | `src/core/document-parsers/PdfParser.ts` |
 
 ### Geplant (nicht implementiert)
 
@@ -274,7 +296,7 @@ Obsilo-Adaption: SubTask-Typen (research, implementation, verification) mit Stat
 
 | Feature | Spec | Prioritaet | Status |
 |---------|------|------------|--------|
-| Remote Transport (Cloudflare Relay) | FEATURE-1403-remote-transport.md | P1-High | In Arbeit |
+| Remote Transport (Cloudflare Relay) | FEATURE-1403-remote-transport.md | P1-High | Implementiert |
 | Remote Authentication | FEATURE-1404-remote-auth.md | P1-High | Geplant |
 | MCP Resources | FEATURE-1405-mcp-resources.md | P1-High | Geplant |
 | MCP Prompts | FEATURE-1406-mcp-prompts.md | P1-High | Geplant |
@@ -374,8 +396,9 @@ Referenz: `_devprocess/analysis/security/AUDIT-003-obsilo-2026-03-06.md`
 
 ### Kurzfristig (aktiv)
 
-1. **MCP Connector Remote Transport (FEATURE-1403)** -- Cloudflare Relay fuer Remote-Zugriff
+1. **EPIC-019 Knowledge Maintenance Phase 2** -- Knowledge Ingest Skill (FEATURE-1900), Template-Onboarding (FEATURE-1903), verbleibende Features
 2. **MCP Remote Auth (FEATURE-1404)** -- Authentifizierung fuer Remote-Clients
+3. **Gemini Provider (ADR-064)** -- Google Gemini als eigenstaendiger Provider (feature/gemini-provider Branch)
 
 ### Kurzfristig (danach)
 

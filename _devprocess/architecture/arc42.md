@@ -1,8 +1,8 @@
 # arc42 — Obsidian Agent Architecture
 
-**Version:** 4.0
-**Stand:** 2026-03-30
-**Status:** Aktuell — EPIC-015 Knowledge Layer implementiert (4-Stufen Retrieval Pipeline), Copilot + Kilo Provider konsolidiert
+**Version:** 5.0
+**Stand:** 2026-04-09
+**Status:** Aktuell — EPIC-018 Token-Kostenreduktion implementiert, EPIC-019 Knowledge Maintenance Phase 1 teilweise implementiert, MCP Remote Transport (FEATURE-1403) implementiert
 
 ---
 
@@ -193,12 +193,12 @@ ToolRegistry
   ├── vault group (8):  get_frontmatter, search_by_tag, get_vault_stats,
   │                     get_linked_notes, get_daily_note, open_note,
   │                     semantic_search, query_base
-  ├── edit group (16):  write_file, edit_file, append_to_file, create_folder,
+  ├── edit group (15):  write_file, edit_file, append_to_file, create_folder,
   │                     delete_file, move_file, update_frontmatter,
   │                     generate_canvas, create_excalidraw,
   │                     create_base, update_base,
   │                     create_docx, create_pptx, create_xlsx,
-  │                     ingest_template, plan_presentation
+  │                     plan_presentation
   ├── web group (2):    web_fetch, web_search
   ├── agent group (12): ask_followup_question, attempt_completion,
   │                     update_todo_list, new_task, switch_mode,
@@ -208,8 +208,11 @@ ToolRegistry
   ├── skill group (6):  execute_command, execute_recipe, call_plugin_api,
   │                     resolve_capability_gap, enable_plugin, render_presentation
   └── mcp group (1):    use_mcp_tool
+  + vault_health_check (registriert, nicht in Gruppen -- intern via VaultHealthService getriggert)
   + DynamicToolFactory (runtime-registered custom tools)
 ```
+
+Hinweis: `ingest_template` wurde entfernt (kein IngestTemplateTool.ts mehr vorhanden). `vault_health_check` (FEATURE-1901, ADR-067) ist registriert aber nicht in den Standard-Tool-Gruppen, da es primaer beim Vault-Open automatisch ausgefuehrt wird.
 
 ### 5.4 Ebene 2: Document Parser Pipeline (EPIC-006)
 
@@ -753,6 +756,47 @@ VaultDNA ermoeglicht dem Agent die Nutzung aller installierten Obsidian-Plugins:
 4. Permissions (Preset: Permissive / Balanced / Restrictive)
 5. Abschluss
 
+### 8.12 Token-Kostenreduktion (EPIC-018)
+
+Drei-Stufen-Ansatz zur Reduktion des Token-Verbrauchs (634k -> 60k fuer einfache Tasks, 90% Reduktion):
+
+1. **Fast Path Execution (ADR-061)**: Recipe-gesteuertes Batching. `FastPathExecutor.ts` erkennt gelernte Recipes und fuehrt Tool-Sequenzen deterministisch aus (Planner + Execution), ohne iterative LLM-Calls. Fallback auf normale ReAct-Loop bei unbekannten Tasks.
+
+2. **KV-Cache-Optimized Prompt (ADR-062)**: Stabile Prompt-Sections (System Prompt, Tool Definitions, Rules) werden vorne positioniert fuer maximale KV-Cache-Hits. Volatile Sections (DateTime, Active File) stehen am Ende. Provider-agnostisch: Anthropic (explizites Caching), OpenAI/Gemini (implizites Prefix-Caching).
+
+3. **Context Externalization (ADR-063)**: Grosse Tool-Results (>4000 Chars) werden in temporaere Dateien ausgelagert. `ResultExternalizer.ts` schreibt in `.obsidian-agent/context/` und injiziert kompakte Referenzen (`<context_ref path="..." lines="N"/>`) in den Kontext. Agent liest bei Bedarf via `read_file`.
+
+| Komponente | Datei |
+|------------|-------|
+| `FastPathExecutor` | `src/core/FastPathExecutor.ts` |
+| `ResultExternalizer` | `src/core/tool-execution/ResultExternalizer.ts` |
+| Prompt-Sections | `src/core/prompts/sections/` |
+
+### 8.13 Knowledge Maintenance (EPIC-019, Phase 1)
+
+Erweitert die passive Knowledge Layer (EPIC-015) um aktive Wissens-Pflege:
+
+1. **VaultHealthService** (`src/core/knowledge/VaultHealthService.ts`): SQL-basierte Lint-Checks beim Vault-Open: verwaiste Notes, fehlende Backlinks, gebrochene Links, schwache Cluster, inkonsistente Tags, Kategorie-Mismatches. Kein LLM-Call fuer den Scan (0 Tokens).
+
+2. **VaultHealthCheckTool** (`src/core/tools/vault/VaultHealthCheckTool.ts`): Agent-Tool fuer programmatischen Zugriff auf Health-Checks. Read-only, registriert aber nicht in Standard-Tool-Gruppen (wird intern getriggert).
+
+3. **VaultHealthRepairModal** (`src/ui/VaultHealthRepairModal.ts`): UI-Modal mit Checkpoint-backed Undo fuer Reparatur-Aktionen. Zeigt Findings gruppiert nach Kategorie, erlaubt selektive Fixes.
+
+4. **OntologyStore** (`src/core/knowledge/OntologyStore.ts`): Taxonomie-Verwaltung in SQLite. Cluster/Entity-Beziehungen, Health-Checks fuer Backlinks, inkrementelles Update.
+
+ADRs: [ADR-065](ADR-065-ontologie-schema.md), [ADR-066](ADR-066-ingest-strategy.md), [ADR-067](ADR-067-lint-architecture.md), [ADR-068](ADR-068-ocr-provider.md).
+
+### 8.14 MCP Server (EPIC-014)
+
+MCP-Server-Architektur fuer externen Zugriff auf Obsilo-Funktionen:
+
+- **McpBridge** (`src/mcp/McpBridge.ts`): Hauptorchestrator, stdio JSON-RPC
+- **6 MCP Tools**: getContext, searchVault, readNotes, writeVault, executeVaultOp, syncSession, updateMemory
+- **3-Tier Approval**: read (auto) / search (auto) / write (User-Approval)
+- **Remote Transport (FEATURE-1403)**: Cloudflare Workers + Durable Objects Relay (`CloudflareDeployer.ts`, `RelayClient.ts`). HTTP Long-Polling, Token-in-URL Auth, Auto-Deployment.
+
+ADRs: [ADR-053](ADR-053-mcp-server-architecture.md), [ADR-054](ADR-054-mcp-tool-mapping.md), [ADR-055](ADR-055-remote-relay.md).
+
 ---
 
 ## 9. Architekturentscheidungen
@@ -813,6 +857,22 @@ Siehe einzelne ADRs in `_devprocess/architecture/`:
 | [ADR-050](ADR-050-sqlite-knowledge-db.md) | SQLite Knowledge DB: sql.js WASM, Zwei-DB-Strategie, Schema v5 |
 | [ADR-051](ADR-051-retrieval-pipeline.md) | 4-Stufen Retrieval Pipeline: Vector → Graph → Implicit → Reranking |
 | [ADR-052](ADR-052-local-reranker.md) | Local Reranker: transformers.js WASM, ms-marco-MiniLM-L-6-v2 |
+| [ADR-053](ADR-053-mcp-server-architecture.md) | MCP Server Prozess-Architektur (stdio, McpBridge) |
+| [ADR-054](ADR-054-mcp-tool-mapping.md) | MCP Tool-Mapping & System-Prompt-Uebertragung (3-Tier) |
+| [ADR-055](ADR-055-remote-relay.md) | Remote MCP Relay via Cloudflare Workers + Durable Objects |
+| [ADR-056](ADR-056-ssg-selection.md) | Static Site Generator fuer Website-Dokumentation |
+| [ADR-057](ADR-057-information-architecture.md) | Informationsarchitektur & Seitenstruktur |
+| [ADR-058](ADR-058-semantic-recipe-promotion.md) | Semantic Recipe Promotion (Intent-basiert statt Sequenz-basiert) |
+| [ADR-059](ADR-059-memory-decay-prevention.md) | Memory Decay Prevention (Aktive Qualitaetssicherung) |
+| [ADR-060](ADR-060-session-summary-reliability.md) | Session-Summary Zuverlaessigkeit und Observability |
+| [ADR-061](ADR-061-fast-path-execution.md) | Fast Path Execution: Recipe-gesteuertes Batching |
+| [ADR-062](ADR-062-kv-cache-optimized-prompt.md) | KV-Cache-Optimized Prompt Structure & Provider-Agnostic Caching |
+| [ADR-063](ADR-063-context-externalization.md) | Context Externalization: Dateisystem als erweiterter Kontext |
+| [ADR-064](ADR-064-gemini-provider.md) | Google Gemini als eigenstaendiger Provider |
+| [ADR-065](ADR-065-ontologie-schema.md) | Ontologie-Schema und Befuellung (EPIC-019) |
+| [ADR-066](ADR-066-ingest-strategy.md) | Ingest-Strategie: Schema-Erkennung und Entitaets-Zuordnung (EPIC-019) |
+| [ADR-067](ADR-067-lint-architecture.md) | Lint-Architektur: Tool, UI und Trigger (EPIC-019) |
+| [ADR-068](ADR-068-ocr-provider.md) | OCR-Provider-Auswahl (FEATURE-1905) |
 
 ---
 
@@ -849,13 +909,25 @@ Siehe einzelne ADRs in `_devprocess/architecture/`:
 
 | Bereich | Beschreibung | Status |
 |---------|-------------|--------|
-| UI Modularisierung | `AgentSidebarView.ts` (~3500 LOC) -- Split in Unterkomponenten | Offen |
+| UI Modularisierung | `AgentSidebarView.ts` (~3500 LOC) -- Split in Unterkomponenten | Teilweise (FEATURE-0902: SuggestionBanner, OnboardingFlow extrahiert) |
 | Virtual Scrolling | Lange Chat-Historien verursachen UI-Lag | Offen |
-| Token-Estimation | ~4 chars/token Schätzung -- genauer mit js-tiktoken | Niedrige Prio |
+| Token-Estimation | ~4 chars/token Schaetzung -- genauer mit js-tiktoken | Niedrige Prio |
+| SuggestionService | Dead Code -- nie instanziiert, nie aufgerufen | Offen (Backlog) |
 
-### Security (AUDIT-003, Stand 2026-03-06)
+### Security (AUDIT-003 bis AUDIT-006, Stand 2026-04-09)
 
-Risikoprofil: 0 Critical, 1 High (by design), 4 Medium (3 by design), 3 Low, 2 Info. Alle bekannten Bugs (FIX-01 bis FIX-06) resolved. Details: `_devprocess/analysis/security/AUDIT-003-obsilo-2026-03-06.md`
+Risikoprofil: 0 Critical, 1 High (by design), 4 Medium (3 by design), 3 Low, 2 Info.
+
+Alle bekannten Bugs (FIX-01 bis FIX-12) resolved:
+- FIX-01 bis FIX-06: Resolved (Details siehe Backlog)
+- FIX-07: Reranker ONNX-Runtime -- Fail-Once-Guard implementiert
+- FIX-08: ImplicitConnections Race Condition -- isOpen() Guard
+- FIX-09: Session-Summaries nicht abrufbar -- DB-Fallback (ADR-060)
+- FIX-10: learnedRecipesEnabled -- Force-True in main.ts (UI-Toggle ausstehend)
+- FIX-11: ChatLink YAML-Parse-Fehler -- concise geloggt, Note uebersprungen
+- FIX-12: Token Overflow -- geloest durch EPIC-018 (ADR-061/062/063)
+
+Security Audits: `_devprocess/analysis/security/AUDIT-003-obsilo-2026-03-06.md` bis `AUDIT-006-obsilo-2026-04-02.md`
 
 ---
 
@@ -921,3 +993,10 @@ Risikoprofil: 0 Critical, 1 High (by design), 4 Medium (3 by design), 3 Low, 2 I
 | **TaskNoteCreator** | Service der ausgewaehlte Tasks als eigenstaendige Notes mit 10-Property-Frontmatter erstellt und die Task-Base (3 Views) generiert |
 | **Task-Frontmatter-Schema** | 10 Properties: Kategorie, Zusammenfassung, Status, Dringend, Wichtig, Faelligkeit, Assignee, Quelle, created, Notizen. Implementiertes Schema weicht vom ADR-027-Vorschlag ab (siehe ADR-027 "Implementiertes Schema") |
 | **Graceful Degradation** | Pattern fuer optionale Plugin-Integration: Feature funktioniert vollstaendig ohne externe Plugins (Iconic, Bases). Fehlende Plugins fuehren zu reduziertem (aber funktionalem) Feature-Set, nicht zu Fehlern |
+| **FastPathExecutor** | Recipe-gesteuertes Batching: Erkennt gelernte Patterns, fuehrt Tool-Sequenzen deterministisch aus ohne iterative LLM-Calls. ADR-061 |
+| **ResultExternalizer** | Lagert grosse Tool-Results (>4000 Chars) in temporaere Dateien aus und injiziert kompakte Referenzen in den Kontext. ADR-063 |
+| **VaultHealthService** | SQL-basierte Lint-Checks auf dem Knowledge Graph: verwaiste Notes, fehlende Backlinks, gebrochene Links, schwache Cluster, inkonsistente Tags. ADR-067, FEATURE-1901 |
+| **OntologyStore** | Taxonomie-Verwaltung in SQLite: Cluster/Entity-Beziehungen, Health-Checks, inkrementelles Update. ADR-065, EPIC-019 |
+| **McpBridge** | MCP-Server-Orchestrator: stdio JSON-RPC, 6 Tools (getContext, searchVault, readNotes, writeVault, executeVaultOp, syncSession, updateMemory). ADR-053 |
+| **CloudflareDeployer** | Deployt MCP Relay-Worker auf Cloudflare Workers + Durable Objects fuer Remote-Zugriff. ADR-055, FEATURE-1403 |
+| **RelayClient** | HTTP Long-Polling Client fuer Remote MCP Transport. Token-in-URL Auth. ADR-055, FEATURE-1403 |

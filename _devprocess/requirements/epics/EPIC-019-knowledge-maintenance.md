@@ -3,7 +3,7 @@
 > **Epic ID**: EPIC-019
 > **Business Alignment**: _devprocess/analysis/BA-019-knowledge-maintenance.md
 > **Scope**: MVP
-> **Status**: Geplant
+> **Status**: Phase 1 Teilweise Implementiert
 
 ## Epic Hypothesis Statement
 
@@ -49,11 +49,11 @@ Was fehlt ist der Schritt vom passiven Index zum aktiven Wissens-Pfleger:
 | Feature ID | Name | Typ | Priority | Effort | Status |
 |------------|------|-----|----------|--------|--------|
 | FEATURE-1900 | Knowledge Ingest Skill | Skill | P0 | M | Geplant |
-| FEATURE-1901 | Vault Health Check (Lint) | Feature (Toggle) | P0 | M | Geplant |
-| FEATURE-1902 | Knowledge Ontologie | Infrastruktur | P0 | M | Geplant |
+| FEATURE-1901 | Vault Health Check (Lint) | Feature (Toggle) | P0 | M | Implementiert (VaultHealthCheckTool, VaultHealthService, VaultHealthRepairModal) |
+| FEATURE-1902 | Knowledge Ontologie | Infrastruktur | P0 | M | Teilweise (OntologyStore.ts implementiert, ADR-065) |
 | FEATURE-1903 | Template-Onboarding | Einmalig | P1 | S | Geplant |
 | FEATURE-1904 | Synthese → Zettel | UI-Button (Toggle) | P1 | S | Geplant |
-| FEATURE-1905 | OCR-Integration | Sub-Feature (Toggle) | P1 | M | Geplant |
+| FEATURE-1905 | OCR-Integration | Sub-Feature (Toggle) | P1 | M | Implementiert (text-extractor Fallback, ADR-068) |
 | FEATURE-1906 | Attachment-Batch-Umbenennung | Skill | P1 | S | Geplant |
 | FEATURE-1907 | Chat UI Polish | UI-Fix | P2 | S | Geplant |
 
