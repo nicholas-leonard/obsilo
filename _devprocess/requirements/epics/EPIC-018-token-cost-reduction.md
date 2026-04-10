@@ -31,9 +31,9 @@ und Provider-spezifischen Optimierungen, ohne die Ergebnisqualitaet zu beeintrae
 
 | Feature ID | Name | Priority | Effort | Status |
 |------------|------|----------|--------|--------|
-| FEATURE-1800 | Fast Path Execution | P0 | M | Not Started |
-| FEATURE-1801 | Prompt Caching (Provider-agnostisch) | P0 | S | Not Started |
-| FEATURE-1802 | Context Externalization (Dateisystem als Kontext) | P1 | M | Not Started |
+| FEATURE-1800 | Fast Path Execution | P0 | M | Implementiert (ADR-061) |
+| FEATURE-1801 | Prompt Caching (Provider-agnostisch) | P0 | S | Implementiert (ADR-062) |
+| FEATURE-1802 | Context Externalization (Dateisystem als Kontext) | P1 | M | Implementiert (ADR-063) |
 
 **Priority:** P0-Critical (ohne geht MVP nicht), P1-High (wichtig), P2-Medium (wertsteigernd)
 **Effort:** S (1-3 Tage), M (4-7 Tage), L (2+ Wochen)
