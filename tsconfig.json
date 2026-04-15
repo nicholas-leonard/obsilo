@@ -28,6 +28,8 @@
   ],
   "exclude": [
     "node_modules",
-    "forked-kilocode"
+    "forked-kilocode",
+    "src/**/__tests__/**",
+    "src/**/*.test.ts"
   ]
 }

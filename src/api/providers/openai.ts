@@ -335,6 +335,33 @@ export class OpenAiProvider implements ApiHandler {
                 toolCallAccumulators.clear();
             }
         }
+
+        // BUG FIX: Flush any remaining accumulated tool calls that were not yielded.
+        // Some OpenAI-compatible providers (e.g. OpenRouter for gpt-oss-120b) return
+        // finish_reason 'stop' instead of 'tool_calls' even when tool call deltas were
+        // streamed. Without this, those tool calls are silently dropped.
+        if (toolCallAccumulators.size > 0) {
+            for (const [, acc] of toolCallAccumulators) {
+                if (!acc.name) continue; // skip empty/incomplete accumulators
+                let input: Record<string, unknown> = {};
+                try {
+                    input = acc.argumentsJson.trim() ? JSON.parse(acc.argumentsJson) : {};
+                } catch (e) {
+                    yield {
+                        type: 'text',
+                        text: `[Tool input parse error for "${acc.name}": ${(e as Error).message}]`,
+                    } satisfies ApiStreamChunk;
+                    continue;
+                }
+                yield {
+                    type: 'tool_use',
+                    id: acc.id || `fallback-${Date.now()}-${acc.name}`,
+                    name: acc.name,
+                    input,
+                } satisfies ApiStreamChunk;
+            }
+            toolCallAccumulators.clear();
+        }
     }
 
     // ---------------------------------------------------------------------------
