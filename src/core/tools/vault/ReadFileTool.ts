@@ -73,7 +73,39 @@ export class ReadFileTool extends BaseTool<'read_file'> {
             } else {
                 // Fallback: file might be in a hidden/dot folder (e.g. .obsidian-agent/)
                 // that Obsidian doesn't index. Use the adapter for direct filesystem access.
-                const exists = await this.app.vault.adapter.exists(path);
+                let exists = await this.app.vault.adapter.exists(path);
+
+                // ADR-063: Externalized tool results live in globalFs (`.obsidian-agent/tmp/...`),
+                // not in the vault. Detect `tmp/task-*` paths and read via globalFs.
+                if (!exists && path.startsWith('tmp/') && this.plugin.globalFs) {
+                    const globalExists = await this.plugin.globalFs.exists(path);
+                    if (globalExists) {
+                        content = await this.plugin.globalFs.read(path);
+                        filePath = path;
+                        const parts = path.split('/');
+                        const filename = parts[parts.length - 1] ?? path;
+                        const dotIdx = filename.lastIndexOf('.');
+                        basename = dotIdx > 0 ? filename.substring(0, dotIdx) : filename;
+                        extension = dotIdx > 0 ? filename.substring(dotIdx + 1) : '';
+
+                        // Skip to content formatting (break out of the if/else chain)
+                        const originalLength = content.length;
+                        if (content.length > MAX_CONTENT_CHARS) {
+                            content = content.slice(0, MAX_CONTENT_CHARS);
+                        }
+                        const result = this.formatContent(content, { path: filePath, basename, extension });
+                        if (originalLength > MAX_CONTENT_CHARS) {
+                            callbacks.pushToolResult(
+                                result + `\n[Truncated: showing ${MAX_CONTENT_CHARS} of ${originalLength} chars. Use search_files for specific content.]`,
+                            );
+                        } else {
+                            callbacks.pushToolResult(result);
+                        }
+                        callbacks.log(`Successfully read externalized result: ${path} (${content.length} chars)`);
+                        return;
+                    }
+                }
+
                 if (!exists) {
                     callbacks.pushToolResult(
                         this.formatError(new Error(`File not found: ${path}`)),
