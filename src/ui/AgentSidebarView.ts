@@ -337,11 +337,13 @@ export class AgentSidebarView extends ItemView {
         // Drag-and-drop handler on the input wrapper
         inputWrapper.addEventListener('dragover', (e: DragEvent) => {
             e.preventDefault();
+            e.stopPropagation(); // Prevent Obsidian workspace from handling the drag
             inputWrapper.addClass('drag-over');
         });
         inputWrapper.addEventListener('dragleave', () => inputWrapper.removeClass('drag-over'));
         inputWrapper.addEventListener('drop', (e: DragEvent) => {
             e.preventDefault();
+            e.stopPropagation(); // Prevent Obsidian from opening the file in a new tab
             inputWrapper.removeClass('drag-over');
 
             // OS file drop (external drag from Finder/Explorer)
@@ -352,7 +354,26 @@ export class AgentSidebarView extends ItemView {
             }
 
             // Obsidian internal drag (from file explorer / search results)
-            // Obsidian passes the vault-relative path as plain text
+            // Obsidian stores the dragged item in app.dragManager.draggable (not in dataTransfer)
+            const dm = (this.app as unknown as Record<string, unknown>).dragManager as
+                { draggable?: { type: string; file?: TFile; files?: TFile[] } } | undefined;
+            const draggable = dm?.draggable;
+            if (draggable) {
+                const draggedFiles: TFile[] = [];
+                if (draggable.type === 'file' && draggable.file instanceof TFile) {
+                    draggedFiles.push(draggable.file);
+                } else if (draggable.type === 'files' && Array.isArray(draggable.files)) {
+                    for (const f of draggable.files) {
+                        if (f instanceof TFile) draggedFiles.push(f);
+                    }
+                }
+                if (draggedFiles.length > 0) {
+                    for (const f of draggedFiles) void this.attachments.addVaultFile(f);
+                    return;
+                }
+            }
+
+            // Fallback: try text/plain (some Obsidian versions / community plugins set this)
             const textData = e.dataTransfer?.getData('text/plain');
             if (textData) {
                 const vaultFile = this.app.vault.getAbstractFileByPath(textData);
