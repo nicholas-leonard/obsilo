@@ -19,8 +19,8 @@ import type { ToolName } from '../tools/types';
 
 export const TOOL_GROUP_MAP: Readonly<Record<ToolGroup, readonly ToolName[]>> = {
     read:  ['read_file', 'read_document', 'list_files', 'search_files'],
-    vault: ['get_frontmatter', 'search_by_tag', 'get_vault_stats', 'get_linked_notes', 'get_daily_note', 'open_note', 'semantic_search', 'query_base'],
-    edit:  ['write_file', 'edit_file', 'append_to_file', 'create_folder', 'delete_file', 'move_file', 'update_frontmatter', 'generate_canvas', 'create_excalidraw', 'create_base', 'update_base', 'create_pptx', 'create_docx', 'create_xlsx', 'plan_presentation'],
+    vault: ['get_frontmatter', 'search_by_tag', 'get_vault_stats', 'get_linked_notes', 'get_daily_note', 'open_note', 'semantic_search', 'query_base', 'vault_health_check'],
+    edit:  ['write_file', 'edit_file', 'append_to_file', 'create_folder', 'delete_file', 'move_file', 'update_frontmatter', 'generate_canvas', 'create_excalidraw', 'create_base', 'update_base', 'create_pptx', 'create_docx', 'create_xlsx', 'plan_presentation', 'ingest_document'],
     web:   ['web_fetch', 'web_search'],
     agent: ['ask_followup_question', 'attempt_completion', 'update_todo_list', 'new_task', 'switch_mode', 'update_settings', 'configure_model', 'read_agent_logs', 'manage_mcp_server', 'manage_skill', 'evaluate_expression', 'manage_source'],
     mcp:   ['use_mcp_tool'],
