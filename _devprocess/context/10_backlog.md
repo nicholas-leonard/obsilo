@@ -1,8 +1,8 @@
 # Obsilo Agent -- Vollstaendiges Backlog
 
-Stand: 2026-04-13
-Branch: `dev` / `feature/gemini-provider` / `feature/graph-intelligence`
-Status: EPIC-020 Graph Intelligence implementiert (v2.4.3)
+Stand: 2026-04-17
+Branch: `dev` / `main`
+Status: **v2.5.0 released** (Community-Wave 1)
 
 ---
 
@@ -411,6 +411,57 @@ Referenz: `_devprocess/analysis/security/AUDIT-003-obsilo-2026-03-06.md`
 
 ---
 
+## Community-Wave 1 (v2.5.0, released 2026-04-17)
+
+Quelle: BA-013, IMPL-007. 4 Community-Issues + 3 Dependabot-Alerts + zwei wahrend Beta-Testing entdeckte Regressionen (BUG-017, BUG-018).
+
+### Features (in bestehende Epics eingeordnet)
+
+| Feature ID | Epic | Kurzbeschreibung | Status |
+|------------|------|------------------|--------|
+| FEATURE-0409 | EPIC-004 | OpenAI-kompatible Streaming Tool-Call Robustheit (post-loop flush fuer OpenRouter gpt-oss-120b + aehnliche) | Implemented v2.5.0 |
+| FEATURE-0507 | EPIC-005 | Konfigurierbarer Agent-Folder (Default `.obsidian-agent`) | Implemented v2.5.0 |
+| FEATURE-1206 | EPIC-012 | Copilot `max_completion_tokens` fuer neue Modelle (gpt-5, o4-mini) | Implemented v2.5.0 |
+| FEATURE-1803 | EPIC-018 | Cross-Platform TMP-Pfade (VaultDataFileAdapter, tmp jetzt vault-resident) | Implemented v2.5.0 |
+
+### ADRs
+
+| ADR | Thema | Status |
+|-----|-------|--------|
+| ADR-072 | Konfigurierbarer Agent-Storage-Root | Accepted |
+| ADR-073 | MCP-Tool-Argument Type-Safety | Superseded (Disables waren schon gefixt) |
+| ADR-074 | Dependency-Override-Strategie (transitive Vulnerabilities) | Accepted |
+
+### Bugs resolved
+
+| Bug | Beschreibung | Resolution |
+|-----|--------------|------------|
+| BUG-013 | OpenRouter Tool-Calls verschluckt bei `finish_reason="stop"` | Post-loop flush in OpenAI + Copilot Provider |
+| BUG-014 | TMP-Files nicht lesbar (Windows + generell) | VaultDataFileAdapter, tmp unter `<agent-folder>/tmp/` |
+| BUG-015 | Copilot 400 bei `max_tokens` | `max_completion_tokens` fuer alle Modelle |
+| BUG-017 | Anthropic 400 "tool_use ids were found without tool_result" | `sanitizeHistoryForApi` Helper, applied an allen 3 createMessage-Stellen |
+| BUG-018 | Agent nutzt built-in `create_excalidraw` / halluziniert Drawio-Format | `CreateExcalidrawTool` detect Plugin + redirect, neues `CreateDrawioTool` built-in, write_file Format-Guard fuer .drawio/.drawio.svg/.excalidraw/.canvas/.pptx/.docx/.xlsx, OTHER ENABLED PLUGINS Sektion im System-Prompt |
+
+### Neu hinzugefuegte Tools
+
+| Tool | Scope | Datei |
+|------|-------|-------|
+| `create_drawio` | Draw.io / diagrams.net Flussdiagramme als `.drawio` oder `.drawio.svg` mit Boxen, Rauten, Ellipsen, Pfeilen, Labels. SVG-Variante rendert direkt in Obsidian und oeffnet editierbar im Plugin. | `src/core/tools/vault/CreateDrawioTool.ts` |
+
+### Security
+
+- protobufjs ueber 7.5.5 (Critical RCE) via `npm overrides`
+- hono ueber 4.12.14 (XSS) via `npm overrides`
+- dompurify ueber 3.4.0 (FORBID_TAGS bypass) via `npm overrides`
+
+### Offen fuer Wave 2
+
+- **BUG-016** (P2) -- Memory-Extractor und SemanticIndex Context-Prefix umgehen den konfigurierten Provider und rufen Anthropic SDK direkt auf. Noisy 400-Errors fuer User ohne Anthropic-Key, aber keine Funktionsverlust.
+- **Excalidraw-Arrows-Extension** -- `CreateExcalidrawTool` kann aktuell nur rectangles + text. Pfeile brauchen Bezier-Bindings (~300 LOC).
+- **Hard Tool-Filter** -- built-in Tools komplett aus dem Schema entfernen, wenn ein Plugin-Aequivalent aktiv ist. Robuster als die Description-Redirect-Heuristik in FEATURE-0507/BUG-018.
+
+---
+
 ## Naechste Prioritaeten
 
 ### Kurzfristig (aktiv)
@@ -418,6 +469,7 @@ Referenz: `_devprocess/analysis/security/AUDIT-003-obsilo-2026-03-06.md`
 1. **EPIC-019 Knowledge Maintenance Phase 2** -- Knowledge Ingest Skill (FEATURE-1900), Template-Onboarding (FEATURE-1903), verbleibende Features
 2. **MCP Remote Auth (FEATURE-1404)** -- Authentifizierung fuer Remote-Clients
 3. **Gemini Provider (ADR-064)** -- Google Gemini als eigenstaendiger Provider (feature/gemini-provider Branch)
+4. **Wave-2 Triage** -- BUG-016, Excalidraw-Arrows, Hard Tool-Filter (siehe oben)
 
 ### Kurzfristig (danach)
 
