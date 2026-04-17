@@ -40,8 +40,8 @@ const WASM_CACHE_FILE = `esbuild-${ESBUILD_VERSION}.wasm`;
  *   shasum -a 256 browser.js esbuild.wasm
  */
 const INTEGRITY_HASHES: Record<string, string> = {
-    [JS_CACHE_FILE]: '9eed236d35e2e5b5fecc079c5e34f7e46effa2a3b8b9e40a9fdcaf54f9a43684',
-    [WASM_CACHE_FILE]: '6cb75da1a8652a84c8468c779e1dce06e70e5d2e5e22096e6a6828aee0a6510a',
+    [JS_CACHE_FILE]: 'a8cd209161ef95d4c3c5c60e67f6ce402afd5fd2c2d2edd46d64f9fe8c7aac17',
+    [WASM_CACHE_FILE]: 'e2b4b98297e04ef12981bafabf0a3c2d7c3c5cf6af603ef79d886deac3b5eeb3',
 };
 
 // ---------------------------------------------------------------------------

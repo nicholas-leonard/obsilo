@@ -59,9 +59,13 @@ export class SandboxBridge {
 
     vaultList(path: string): string[] {
         this.checkCircuitBreaker();
+        // Normalize '/' to '' (vault root) before validation
+        if (path === '/') path = '';
         this.validateVaultPath(path);
         this.logBridgeOp('vault-list', path);
-        const folder = this.plugin.app.vault.getAbstractFileByPath(path);
+        const folder = path === ''
+            ? this.plugin.app.vault.getRoot()
+            : this.plugin.app.vault.getAbstractFileByPath(path);
         if (!(folder instanceof TFolder)) throw new Error(`Not a folder: ${path}`);
         const result = folder.children.map(c => c.path);
         this.recordSuccess();
