@@ -341,6 +341,8 @@ Handoff: `architect-handoff-022.md` + `plan-context-022.md`
 | Universal Skill-Import (.md / Folder / .skill) | FEATURE-2202-skill-zip-import.md | P0-Critical | S | Implemented (core) 2026-04-18 (feature-branch, unreleased) |
 | Scripts-im-Skill (Sandbox) | FEATURE-2203-skill-scripts.md | P1-High | M | Geplant |
 | Coordinator-Skill (Multi-Rolle) | FEATURE-2204-coordinator-skill.md | P1-High | M | Geplant |
+| Slash Skill Autocomplete (`/` shows skills) | FEATURE-2205-slash-skill-autocomplete.md | P1-High | XS | Implemented (core) 2026-04-18 (feature-branch, unreleased) |
+| Inline @-Reference (@name stays in text) | FEATURE-2206-inline-at-reference.md | P1-High | XS | Implemented (core) 2026-04-18 (feature-branch, unreleased) |
 
 Release-Plan: 2201+2202 zusammen als v2.6.0 (Anthropic-kompatibles Minimum). 2203+2204 additiv als v2.6.1 / v2.6.2.
 Backward-Compat: Alle 9 bundled-skills + bestehende User-Skills laden unveraendert.
