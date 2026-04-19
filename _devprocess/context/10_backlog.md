@@ -523,9 +523,13 @@ Analyse: [BA-022](../analysis/BA-022-community-feedback-wave-4.md).
 
 Nicht im Scope dieser Welle: TTL fuer externalized tmp files, hash-drift CI-Guard (separate ADR), kontributions-Guidelines-Dokument.
 
-**Beta-7 Test-Funde (nicht blockierend):**
-- [BUG-023](../analysis/BUG-023-externalize-cleanup-eperm-icloud.md) Externalize-Cleanup scheitert mit EPERM auf iCloud-Vaults. Non-fatal (nur Log-Warning), Tmp-Dirs wachsen langsam an. Fix fuer spaetere Welle: defer-cleanup auf naechsten Plugin-Start.
-- [BUG-024](../analysis/BUG-024-fastpath-planner-json-parse.md) FastPath-Planner `JSON.parse` scheitert wenn LLM (Copilot Sonnet 4.6) mit Prosa-Preamble antwortet. Non-fatal (faellt zurueck auf normale Loop, verliert aber Fast-Path-Speedup). Fix fuer spaetere Welle: Markdown-Fence-Stripping + First-Balanced-JSON-Scanner.
+**Beta-7 Test-Funde -- in Beta-8 aufgenommen:**
+
+| Arbeitsstrom | Epic | Status |
+|---|---|---|
+| [BUG-023](../analysis/BUG-023-externalize-cleanup-eperm-icloud.md) Externalize-Cleanup EPERM auf iCloud | EPIC-018 / ADR-063 | Resolved 2026-04-19. `removeWithRetry()` Helper mit 3 Versuchen (0/150/500ms) fuer transiente EPERM/EBUSY/ETXTBSY. Orphan-Sweeper auf naechstem Plugin-Start bleibt als Safety-Net. 2 neue Tests. |
+| [BUG-024](../analysis/BUG-024-fastpath-planner-json-parse.md) FastPath-Planner JSON-Parse bei LLM-Prosa | EPIC-018 / ADR-061 | Resolved 2026-04-19. Neuer `extractFirstJsonDocument()` mit Fence-Strip + Balanced-Bracket-Scanner (respektiert String-Literale + Escapes). 10 neue Tests. |
+| [BUG-025](../analysis/BUG-025-health-badge-regression-and-icon-redesign.md) Vault-Health-Badge verschwunden + Redesign | EPIC-019 / FEATURE-1901 | Resolved 2026-04-19. Beta-5-Race gefixt via `syncHealthBadge()` im View-Mount. Dot → lucide `heart-pulse` Icon, Placement links neben Settings-Button, `color: var(--color-red/orange)` via severity-Class. Titel "Obsilo agent" → "Obsilo". |
 
 ---
 
