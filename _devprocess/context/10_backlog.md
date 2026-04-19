@@ -475,6 +475,13 @@ Quelle: BA-013, IMPL-007. 4 Community-Issues + 3 Dependabot-Alerts + zwei wahren
 - hono ueber 4.12.14 (XSS) via `npm overrides`
 - dompurify ueber 3.4.0 (FORBID_TAGS bypass) via `npm overrides`
 
+### Security -- Deferred from AUDIT-012 (2026-04-19)
+
+| ID | Prio | Typ | Source | Status | Evidence | Notes |
+|---|---|---|---|---|---|---|
+| SEC-M-1 | P2 | Security | SEC (AUDIT-012) | Planned | [SelfAuthoredSkillLoader.ts:845](../../src/core/skills/SelfAuthoredSkillLoader.ts#L845) | HTML-comment Metadata-Block hat keine Length-Limit. Fix: cap bei 65 KB Match + 500 Zeilen in `parseFrontmatter`. XS Effort. |
+| SEC-L-1 | P3 | Security | SEC (AUDIT-012) | Planned | [SkillPackageImporter.ts:215-219](../../src/core/skills/SkillPackageImporter.ts#L215-L219) | JSZip `_data.uncompressedSize` ist private API. Regression-Test der dessen Presence asserted, damit ein Silent-API-Break nicht den Zip-Bomb-Guard degradiert. XS Effort. |
+
 ### Offen fuer Wave 2
 
 - ~~**BUG-016**~~ -- Resolved in Wave-2 Arbeit (session-disable auf permanent provider errors statt retry-spam). Befund war: kein Anthropic-Hardcoding, sondern User hatte Anthropic-Modell konfiguriert ohne Credits. Fix ist defensive error handling.

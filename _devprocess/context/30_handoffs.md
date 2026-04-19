@@ -5,6 +5,32 @@ was uebergeben wurde und was der naechste Schritt ist.
 
 ---
 
+## 2026-04-19 -- v2.6.0 Pre-Release Security Audit: Coding -> Release Closure
+
+**Phase:** Security Audit abgeschlossen. Ready for Public Release.
+
+**Artefakte erzeugt:**
+- [AUDIT-012-obsilo-2026-04-19.md](../analysis/security/AUDIT-012-obsilo-2026-04-19.md)
+
+**Overall Risk:** MEDIUM. **Release-Verdict: GREEN.**
+
+**Kernpunkte:**
+- 0 Critical, 0 High.
+- 2 Medium: M-1 (HTML-comment Metadata Length-Limit, accepted fuer v2.6.0) und M-2 (TOCTOU in SkillPackageImporter, mitigated durch UI-Gate). Beide in Backlog.
+- 5 Low, alle mitigated.
+- npm audit: 0 vulnerabilities.
+- OWASP Top 10 + OWASP LLM Top 10 komplett durchgegangen.
+
+**Deferred Items in Backlog (Standalone Items -> Security):**
+- SEC-M-1 (P2, XS): Cap HTML-comment metadata length + parseFrontmatter lines.
+- SEC-L-1 (P3, XS): Regression-Test fuer JSZip `_data.uncompressedSize`.
+
+**Architectural Concerns:** Keine. Alle primaeren Attack-Vectors (path-traversal, zip-bomb, prototype-pollution, code-injection, configDir-Protection, dependency-CVEs) haben Defense-in-Depth.
+
+**Naechster Schritt:** /review-bot fuer Obsidian Community Plugin Pre-Push-Check, dann Public Release v2.6.0.
+
+---
+
 ## 2026-04-17 -- EPIC-022 Skill-Package Ecosystem: RE -> Architecture -> Coding
 
 **Phase:** Requirements Engineering + Architecture abgeschlossen. Ready for Coding.
