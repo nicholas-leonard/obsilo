@@ -530,6 +530,7 @@ Nicht im Scope dieser Welle: TTL fuer externalized tmp files, hash-drift CI-Guar
 | [BUG-023](../analysis/BUG-023-externalize-cleanup-eperm-icloud.md) Externalize-Cleanup EPERM auf iCloud | EPIC-018 / ADR-063 | Resolved 2026-04-19. `removeWithRetry()` Helper mit 3 Versuchen (0/150/500ms) fuer transiente EPERM/EBUSY/ETXTBSY. Orphan-Sweeper auf naechstem Plugin-Start bleibt als Safety-Net. 2 neue Tests. |
 | [BUG-024](../analysis/BUG-024-fastpath-planner-json-parse.md) FastPath-Planner JSON-Parse bei LLM-Prosa | EPIC-018 / ADR-061 | Resolved 2026-04-19. Neuer `extractFirstJsonDocument()` mit Fence-Strip + Balanced-Bracket-Scanner (respektiert String-Literale + Escapes). 10 neue Tests. |
 | [BUG-025](../analysis/BUG-025-health-badge-regression-and-icon-redesign.md) Vault-Health-Badge verschwunden + Redesign | EPIC-019 / FEATURE-1901 | Resolved 2026-04-19. Beta-5-Race gefixt via `syncHealthBadge()` im View-Mount. Dot → lucide `heart-pulse` Icon, Placement links neben Settings-Button, `color: var(--color-red/orange)` via severity-Class. Titel "Obsilo agent" → "Obsilo". |
+| [BUG-026](../analysis/BUG-026-brat-hotreload-view-opens-before-plugin-ready.md) Sidebar crasht bei BRAT-Hot-Reload | EPIC-004 / FEATURE-2208 | Resolved 2026-04-19. `plugin.readyPromise` synchron in `onload()` aufgesetzt, View-`onOpen` wartet darauf bevor Settings/ModeService gelesen werden. Behebt TypeError `currentMode`/`autoAddActiveFileContext` bei Layout-Restore innerhalb der `onload`-Tick. |
 
 ---
 
