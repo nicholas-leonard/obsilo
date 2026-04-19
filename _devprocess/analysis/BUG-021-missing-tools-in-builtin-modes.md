@@ -1,6 +1,6 @@
 # BUG-021: vault_health_check and ingest_document missing from builtin mode tool groups
 
-> **Status:** Resolved 2026-04-19 (feature-branch, unreleased)
+> **Status:** Resolved 2026-04-19 (beta-7) + 2026-04-19 amendment (beta-10 find_tool fix)
 > **Priority:** P2
 > **Epic:** EPIC-019 (Knowledge Maintenance)
 > **Date:** 2026-04-19
@@ -71,6 +71,38 @@ One-line changes, no other files involved.
 
 - Re-sorting the existing group arrays alphabetically (cosmetic).
 - Splitting `edit` into smaller sub-groups (separate UX decision).
+
+## Amendment 2026-04-19 (beta-10)
+
+Beta-7 added `vault_health_check` to `TOOL_GROUP_MAP.vault` and
+`ingest_document` to `TOOL_GROUP_MAP.edit`, backed by the
+`TOOL_GROUP_MAP` coverage test. Live BRAT testing surfaced a second
+reason the agent still could not invoke the tools: both tools are in
+`DEFERRED_TOOL_NAMES` (FEATURE-1600), so the LLM has to go through
+`find_tool` to activate them. The LLM phrased the query as
+`"vault health check"` (spaces, natural English), but the matcher in
+`FindToolTool.execute` only did plain substring matching. The tool
+name is `vault_health_check` and the label is just `"Health Check"`
+-- the phrase `"vault health check"` existed in neither string, so
+the match scored zero and the tool stayed hidden.
+
+**Fix (FindToolTool.ts):**
+
+- Tokenise the query on whitespace / `-` / `_`, require tokens
+  >= 3 chars (filters noise words like "no", "at").
+- Normalise haystacks by replacing `_` and `-` with spaces, so
+  `vault_health_check` and `vault-health-check` match the same
+  phrase.
+- Score phrase hits on name / label strongest; score per-token hits
+  additively.
+- Require a STRONG hit (phrase on any field, OR token on name/label)
+  before a tool enters the match list -- description-only token hits
+  were noisy (common words like "tool", "note", "file").
+
+Tests: 5 new cases in `deferredToolLoading.test.ts` that would have
+caught the regression (multi-word queries like `"vault health check"`,
+`"create pptx"`, `"ingest document"`, hyphenated form, label-only
+`"health"` hit).
 
 ## References
 
