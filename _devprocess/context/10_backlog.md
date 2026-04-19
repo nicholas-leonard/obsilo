@@ -343,6 +343,7 @@ Handoff: `architect-handoff-022.md` + `plan-context-022.md`
 | Coordinator-Skill (Multi-Rolle) | FEATURE-2204-coordinator-skill.md | P1-High | M | Geplant |
 | Slash Skill Autocomplete (`/` shows skills) | FEATURE-2205-slash-skill-autocomplete.md | P1-High | XS | Implemented (core) 2026-04-18 (feature-branch, unreleased) |
 | Inline @-Reference (@name stays in text) | FEATURE-2206-inline-at-reference.md | P1-High | XS | Implemented (core) 2026-04-18 (feature-branch, unreleased) |
+| Prefix Split (`/` Skills, `#` Prompts, `\u00a7` Workflows) + `+` menu | FEATURE-2207-prefix-split-and-plus-menu.md | P1-High | S | Implemented (core) 2026-04-19 (feature-branch, unreleased) |
 
 Release-Plan: 2201+2202 zusammen als v2.6.0 (Anthropic-kompatibles Minimum). 2203+2204 additiv als v2.6.1 / v2.6.2.
 Backward-Compat: Alle 9 bundled-skills + bestehende User-Skills laden unveraendert.
