@@ -174,8 +174,8 @@ onMounted(() => {
 <template>
   <section class="landing-hero">
     <a href="https://github.com/pssah4/obsilo/releases" class="landing-badge" target="_blank" rel="noopener">
-      <span class="landing-badge-version">v2.4</span>
-      <span>Graph intelligence, knowledge maintenance, vault health checks</span>
+      <span class="landing-badge-version">v2.6</span>
+      <span>Anthropic-compatible skill packages, universal import, vault health at a glance</span>
     </a>
 
     <h1 class="landing-title">Your Obsidian vault,<br>with a real AI Agent.</h1>
